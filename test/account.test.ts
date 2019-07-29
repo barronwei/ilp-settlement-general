@@ -19,18 +19,16 @@ describe('Accounts', function () {
     engine = new SettlementEngine(
       {
         redis: new Redis(),
-        address: '',
-        clientId: '',
-        secret: '',
+        clientId: 'test123',
+        secret: 'secret',
         prefix: '',
         assetScale: 1,
         unitName: ''
       },
       {
-        configureAPI: () => 1,
-        subscribeAPI: () => 1,
+        handleIncomingTransaction: () => 1,
         settleOutgoingTransaction: () => 1,
-        handleIncomingTransaction: () => 1
+        configureAPI: () => 1
       }
     )
 

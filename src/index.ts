@@ -21,6 +21,7 @@ const DEFAULT_PORT = 3000
 
 // 0 for test & 1 for live
 const DEFAULT_MODE = false
+
 const DEFAULT_CONNECTOR_URL = 'http://localhost:7771'
 const DEFAULT_REDIS_PORT = 6379
 const DEFAULT_MIN_UNITS = 1000000
@@ -35,9 +36,9 @@ export interface EngineConfig {
   redisPort?: number
   redis?: ioredis.Redis
 
-  address?: string
   clientId: string
   secret: string
+  address?: string
 
   prefix: string
   assetScale: number
@@ -46,10 +47,11 @@ export interface EngineConfig {
 }
 
 export interface EnginePlugin {
-  configureAPI: any
-  subscribeAPI: any
-  settleOutgoingTransaction: any
   handleIncomingTransaction: any
+  settleOutgoingTransaction: any
+  configureAPI: any
+  subscribeAPI?: any
+  eliminateAPI?: any
 }
 
 export class SettlementEngine {
@@ -67,9 +69,9 @@ export class SettlementEngine {
   redisPort: number
   redis: ioredis.Redis
 
-  address: string
   clientId: string
   secret: string
+  address: string
 
   prefix: string
   assetScale: number
@@ -77,10 +79,11 @@ export class SettlementEngine {
   minUnits: number
 
   // Plugin Config
-  configureAPI: any
-  subscribeAPI: any
-  settleTX: any
   handleTX: any
+  settleTX: any
+  configureAPI: any
+  subscribeAPI?: any
+  eliminateAPI?: any
 
   constructor (config: EngineConfig, plugin: EnginePlugin) {
     this.app = new Koa()
@@ -99,19 +102,20 @@ export class SettlementEngine {
     this.redisPort = config.redisPort || DEFAULT_REDIS_PORT
     this.redis = config.redis || new ioredis(this.redisPort)
 
-    this.address = config.address || config.clientId
     this.clientId = config.clientId
     this.secret = config.secret
+    this.address = config.address || config.clientId
 
     this.prefix = config.prefix
     this.assetScale = config.assetScale
     this.unitName = config.unitName
     this.minUnits = config.minUnits || DEFAULT_MIN_UNITS
 
+    this.handleTX = plugin.handleIncomingTransaction
+    this.settleTX = plugin.settleOutgoingTransaction
     this.configureAPI = plugin.configureAPI
     this.subscribeAPI = plugin.subscribeAPI
-    this.settleTX = plugin.settleOutgoingTransaction
-    this.handleTX = plugin.handleIncomingTransaction
+    this.eliminateAPI = plugin.eliminateAPI
 
     this.app.context.redis = this.redis
     this.app.context.address = this.address
@@ -151,6 +155,13 @@ export class SettlementEngine {
       this.findAccountMiddleware,
       createSettlement
     )
+
+    // Webhooks
+    if (!this.subscribeAPI) {
+      this.router.post('/accounts/:id/webhooks', ctx =>
+        this.handleTransaction(ctx)
+      )
+    }
   }
 
   async getPaymentDetails (accountId: string) {
@@ -228,16 +239,33 @@ export class SettlementEngine {
   }
 
   public async start () {
-    console.log('Starting to listen on', this.port)
     this.server = this.app.listen(this.port, this.host)
+    console.log('Starting to listen on', this.port)
 
+    await this.configureAPI({
+      address: this.address,
+      clientId: this.clientId,
+      secret: this.secret,
+      mode: this.mode
+    })
     console.log(`Starting engine in ${this.mode ? 'live' : 'test'} mode!`)
-    await this.configureAPI(this.clientId, this.secret, this.mode)
 
     const urlName =
       this.host === DEFAULT_HOST
         ? await ngrok.connect(this.port)
         : `https://${this.host}:${this.port}`
+    console.log(`Engine running at ${urlName}!`)
+
+    if (this.subscribeAPI) {
+      await this.subscribeAPI({
+        urlName,
+        handler: this.handleTransaction.bind(this)
+      })
+      console.log('Initializing subscriptions!')
+    } else {
+      console.log(`Webhooks at ${urlName}/accounts/${this.clientId}/webhooks!`)
+    }
+
     console.log(
       `Listening for incoming ${
         this.prefix
@@ -246,9 +274,15 @@ export class SettlementEngine {
   }
 
   public async close () {
-    console.log('Shutting down!')
-    this.host === DEFAULT_HOST
-      ? await Promise.all([ngrok.disconnect(), this.server.close()])
-      : this.server.close()
+    console.log('Shutting down engine!')
+    if (this.eliminateAPI) {
+      await this.eliminateAPI()
+    }
+    if (this.host === DEFAULT_HOST) {
+      await ngrok.disconnect()
+      this.server.close()
+    } else {
+      this.server.close()
+    }
   }
 }

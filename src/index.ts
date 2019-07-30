@@ -173,7 +173,7 @@ export class SettlementEngine {
 
   async getPaymentDetails (accountId: string, units: string) {
     const url = `${this.connectorUrl}\\accounts\\${accountId}\\messages`
-    const msg = this.embarkTX
+    const message = this.embarkTX
       ? {
         type: 'paymentRequest',
         data: {
@@ -186,7 +186,7 @@ export class SettlementEngine {
         }
       }
       : { type: 'paymentDetails' }
-    const res = await axios.post(url, Buffer.from(JSON.stringify(msg)), {
+    const res = await axios.post(url, Buffer.from(JSON.stringify(message)), {
       timeout: 10000,
       headers: {
         'Content-type': 'application/octet-stream',

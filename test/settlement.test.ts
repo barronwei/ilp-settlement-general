@@ -34,8 +34,7 @@ describe('Accounts Settlement', function () {
       },
       {
         handleIncomingTransaction: () => 1,
-        settleOutgoingTransaction: () => 1,
-        configureAPI: () => 1
+        settleOutgoingTransaction: () => 1
       }
     )
     await engine.start()
@@ -93,7 +92,7 @@ describe('Accounts Settlement', function () {
     })
   })
 
-  it('Attempts to get payment details from counterparty during settlement', async () => {
+  it('Attempts to get payment details from counterparty', async () => {
     const paymentDetails = {
       address: 'test123',
       tag: 123456

@@ -27,8 +27,7 @@ describe('Accounts', function () {
       },
       {
         handleIncomingTransaction: () => 1,
-        settleOutgoingTransaction: () => 1,
-        configureAPI: () => 1
+        settleOutgoingTransaction: () => 1
       }
     )
 

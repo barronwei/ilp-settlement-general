@@ -19,7 +19,7 @@ export async function create (ctx: Context) {
 
 async function handleMessage (message: Message, ctx: Context) {
   const { type, data } = message
-  const { params, prefix, redis, address, settleTX } = ctx
+  const { address, params, prefix, redis, settleTX } = ctx
   const accountId: string = params.id
   const res = await redis.get(`${prefix}:accountId:${accountId}:tag`)
   const tag: number = res || randomBytes(4).readUInt32BE(0)

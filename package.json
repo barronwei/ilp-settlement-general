@@ -17,7 +17,6 @@
   "author": "Barron Wei",
   "license": "Apache-2.0",
   "dependencies": {
-    "@types/stripe": "^6.31.9",
     "axios": "^0.19.0",
     "ioredis": "^4.11.2",
     "koa": "^2.7.0",
@@ -34,6 +33,7 @@
     "@types/koa-router": "^7.0.42",
     "@types/mocha": "^5.2.7",
     "@types/sinon": "^7.0.13",
+    "@types/stripe": "^6.31.10",
     "@types/uuid": "^3.4.5",
     "camelcase-keys": "^6.0.0",
     "chai": "^4.2.0",

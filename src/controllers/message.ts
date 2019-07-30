@@ -29,7 +29,8 @@ async function handleMessage (message: Message, ctx: Context) {
   }
   switch (type) {
     case 'paymentRequest':
-      await settleTX({ data, tag })
+      const { token, units }: { token: string; units: string } = data
+      await settleTX({ token, tag }, units)
       return
     case 'paymentDetails':
       const paymentDetails: PayDetails = {

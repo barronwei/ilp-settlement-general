@@ -17,6 +17,7 @@
   "author": "Barron Wei",
   "license": "Apache-2.0",
   "dependencies": {
+    "@types/stripe": "^6.31.9",
     "axios": "^0.19.0",
     "ioredis": "^4.11.2",
     "koa": "^2.7.0",
@@ -42,6 +43,7 @@
     "mockttp": "^0.16.1",
     "sinon": "^7.3.2",
     "source-map-support": "^0.5.12",
+    "stripe": "^7.5.0",
     "ts-node": "^8.3.0",
     "tslint": "^5.18.0",
     "tslint-config-standard": "^8.0.1",

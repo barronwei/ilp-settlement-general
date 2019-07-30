@@ -49,7 +49,8 @@ export interface EngineConfig {
 export interface EnginePlugin {
   handleIncomingTransaction: any
   settleOutgoingTransaction: any
-  configureAPI: any
+  embarkTransactionRequest?: any
+  configureAPI?: any
   subscribeAPI?: any
   eliminateAPI?: any
 }
@@ -81,7 +82,8 @@ export class SettlementEngine {
   // Plugin Config
   handleTX: any
   settleTX: any
-  configureAPI: any
+  embarkTX?: any
+  configureAPI?: any
   subscribeAPI?: any
   eliminateAPI?: any
 
@@ -113,6 +115,7 @@ export class SettlementEngine {
 
     this.handleTX = plugin.handleIncomingTransaction
     this.settleTX = plugin.settleOutgoingTransaction
+    this.embarkTX = plugin.embarkTransactionRequest
     this.configureAPI = plugin.configureAPI
     this.subscribeAPI = plugin.subscribeAPI
     this.eliminateAPI = plugin.eliminateAPI
@@ -122,6 +125,10 @@ export class SettlementEngine {
     this.app.context.prefix = this.prefix
     this.app.context.assetScale = this.assetScale
     this.app.context.settleAccount = this.settleAccount.bind(this)
+
+    if (this.embarkTX) {
+      this.app.context.settleTX = this.settleTX.bind(this)
+    }
 
     // Routes
     this.router = new Router()
@@ -164,12 +171,22 @@ export class SettlementEngine {
     }
   }
 
-  async getPaymentDetails (accountId: string) {
+  async getPaymentDetails (accountId: string, units: string) {
     const url = `${this.connectorUrl}\\accounts\\${accountId}\\messages`
-    const message = {
-      type: 'paymentDetails'
-    }
-    const res = await axios.post(url, Buffer.from(JSON.stringify(message)), {
+    const msg = this.embarkTX
+      ? {
+        type: 'paymentRequest',
+        data: {
+          token: await this.embarkTX(
+            this.clientId,
+            this.secret,
+            this.address
+          ),
+          units
+        }
+      }
+      : { type: 'paymentDetails' }
+    const res = await axios.post(url, Buffer.from(JSON.stringify(msg)), {
       timeout: 10000,
       headers: {
         'Content-type': 'application/octet-stream',
@@ -185,11 +202,13 @@ export class SettlementEngine {
       `Attempting to send ${units} ${this.unitName} to account: ${id}`
     )
     try {
-      const details = await this.getPaymentDetails(id).catch(err => {
+      const details = await this.getPaymentDetails(id, units).catch(err => {
         console.error('Error getting payment details from counterparty', err)
         throw err
       })
-      this.settleTX(account, details, units)
+      if (!this.embarkTX) {
+        await this.settleTX(details, units)
+      }
     } catch (err) {
       console.error(`Failed to send ${units} ${this.unitName} to ${id}:`, err)
     }
@@ -242,19 +261,22 @@ export class SettlementEngine {
     this.server = this.app.listen(this.port, this.host)
     console.log('Starting to listen on', this.port)
 
-    await this.configureAPI({
-      address: this.address,
-      clientId: this.clientId,
-      secret: this.secret,
-      mode: this.mode
-    })
-    console.log(`Starting engine in ${this.mode ? 'live' : 'test'} mode!`)
-
     const urlName =
       this.host === DEFAULT_HOST
         ? await ngrok.connect(this.port)
         : `https://${this.host}:${this.port}`
     console.log(`Engine running at ${urlName}!`)
+
+    if (this.configureAPI) {
+      await this.configureAPI({
+        address: this.address,
+        client: this.clientId,
+        secret: this.secret,
+        mode: this.mode,
+        host: urlName
+      })
+    }
+    console.log(`Starting engine in ${this.mode ? 'live' : 'test'} mode!`)
 
     if (this.subscribeAPI) {
       await this.subscribeAPI({

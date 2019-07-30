@@ -18,17 +18,20 @@ export async function create (ctx: Context) {
 }
 
 async function handleMessage (message: Message, ctx: Context) {
-  const { type } = message
-  const { params, prefix, redis, address } = ctx
+  const { type, data } = message
+  const { params, prefix, redis, address, settleTX } = ctx
   const accountId: string = params.id
+  const res = await redis.get(`${prefix}:accountId:${accountId}:tag`)
+  const tag: number = res || randomBytes(4).readUInt32BE(0)
+  if (!res) {
+    await redis.set(`${prefix}:tag:${tag}:accountId`, accountId)
+    await redis.set(`${prefix}:accountId:${accountId}:tag`, tag)
+  }
   switch (type) {
+    case 'paymentRequest':
+      await settleTX({ data, tag })
+      return
     case 'paymentDetails':
-      const res = await redis.get(`${prefix}:accountId:${accountId}:tag`)
-      const tag: number = res || randomBytes(4).readUInt32BE(0)
-      if (!res) {
-        await redis.set(`${prefix}:tag:${tag}:accountId`, accountId)
-        await redis.set(`${prefix}:accountId:${accountId}:tag`, tag)
-      }
       const paymentDetails: PayDetails = {
         address,
         tag

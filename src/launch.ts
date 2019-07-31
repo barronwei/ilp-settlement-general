@@ -12,6 +12,7 @@ const REDIS_PORT = process.env.REDIS_PORT || 6379
 const LEDGER_CLIENT_ID = process.env.LEDGER_CLIENT_ID || ''
 const LEDGER_SECRET = process.env.LEDGER_SECRET || ''
 const LEDGER_ADDRESS = process.env.LEDGER_ADDRESS || ''
+const LEDGER_PAY_FLOW = process.env.LEDGER_PAY_FLOW || false
 
 const LEDGER_PREFIX = process.env.LEDGER_PREFIX || ''
 const LEDGER_ASSET_SCALE = process.env.LEDGER_ASSET_SCALE || 2
@@ -37,6 +38,8 @@ const config: EngineConfig = {
   clientId: LEDGER_CLIENT_ID,
   secret: LEDGER_SECRET,
   address: LEDGER_ADDRESS,
+
+  payFlow: !!LEDGER_PAY_FLOW,
 
   prefix: LEDGER_PREFIX,
   assetScale: +LEDGER_ASSET_SCALE,

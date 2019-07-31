@@ -8,9 +8,7 @@ In contrast to the available PayPal and XRP settlement engines, this general abs
 
 If a platform such as Stripe requires an indirect payment flow in which a token needs to be authorized, supplying an additional method to the plugin, `embarkTransactionRequest`, will allow the engine to supply the token during the request for `PaymentDetails` via this function. Moreover, the engine assumes that `settleOutgoingTransaction` will resolve the token.
 
-In addition, `configureAPI` and `subscribeAPI` are available to set up any platform's API. If `subscribeAPI` is not provided, the engine assumes that webhooks are needed to listen for incoming transactions and sets that route up.
-
-This abstraction also currently has a miscellaneous endpoint `accounts/:id/misc` to accept any post requests that can be handled by the `handleIncomingMisc` method. 
+In addition, `configureAPI` and `subscribeAPI` are available to set up any platform's API. If `subscribeAPI` is not provided, the engine assumes that webhooks are needed to listen for incoming transactions and sets that route up. 
 
 ## TODO
 
@@ -18,6 +16,7 @@ This abstraction also currently has a miscellaneous endpoint `accounts/:id/misc`
 - [ ] Refactor indirect payment flow
 - [ ] Add types for engine plugin methods
 - [ ] Add integration tests
+- [ ] Update README to account for new indirect payment flow
 
 ## Contributing
 

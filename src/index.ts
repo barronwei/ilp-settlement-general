@@ -24,6 +24,10 @@ const DEFAULT_MODE = false
 
 const DEFAULT_CONNECTOR_URL = 'http://localhost:7771'
 const DEFAULT_REDIS_PORT = 6379
+
+// 0 for direct & 1 for indirect
+const DEFAULT_PAY_FLOW = false
+
 const DEFAULT_MIN_UNITS = 1000000
 
 export interface EngineConfig {
@@ -39,6 +43,8 @@ export interface EngineConfig {
   clientId: string
   secret: string
   address?: string
+
+  payFlow?: boolean
 
   prefix: string
   assetScale: number
@@ -75,6 +81,8 @@ export class SettlementEngine {
   secret: string
   address: string
 
+  payFlow: boolean
+
   prefix: string
   assetScale: number
   unitName: string
@@ -83,8 +91,6 @@ export class SettlementEngine {
   // Plugin Config
   handleTX: any
   settleTX: any
-  embarkTX?: any
-  handleMisc?: any
   configureAPI?: any
   subscribeAPI?: any
   eliminateAPI?: any
@@ -108,7 +114,9 @@ export class SettlementEngine {
 
     this.clientId = config.clientId
     this.secret = config.secret
-    this.address = config.address || config.clientId
+    this.address = config.address || this.clientId
+
+    this.payFlow = config.payFlow || DEFAULT_PAY_FLOW
 
     this.prefix = config.prefix
     this.assetScale = config.assetScale
@@ -117,21 +125,16 @@ export class SettlementEngine {
 
     this.handleTX = plugin.handleIncomingTransaction
     this.settleTX = plugin.settleOutgoingTransaction
-    this.embarkTX = plugin.embarkTransactionRequest
-    this.handleMisc = plugin.handleIncomingMisc
     this.configureAPI = plugin.configureAPI
     this.subscribeAPI = plugin.subscribeAPI
     this.eliminateAPI = plugin.eliminateAPI
 
     this.app.context.redis = this.redis
     this.app.context.address = this.address
+    this.app.context.payFlow = this.payFlow
     this.app.context.prefix = this.prefix
     this.app.context.assetScale = this.assetScale
     this.app.context.settleAccount = this.settleAccount.bind(this)
-
-    if (this.embarkTX) {
-      this.app.context.settleTX = this.settleTX.bind(this)
-    }
 
     // Routes
     this.router = new Router()
@@ -172,28 +175,14 @@ export class SettlementEngine {
         this.handleTransaction(ctx)
       )
     }
-
-    // Miscellaneous
-    if (this.handleMisc) {
-      this.router.post('/accounts/:id/misc', ctx => this.handleMisc(ctx))
-    }
   }
 
   async getPaymentDetails (accountId: string, units: string) {
     const url = `${this.connectorUrl}\\accounts\\${accountId}\\messages`
-    const message = this.embarkTX
-      ? {
-        type: 'paymentRequest',
-        data: {
-            token: await this.embarkTX(
-              this.clientId,
-              this.secret,
-              this.address
-            ),
-            units
-          }
-      }
-      : { type: 'paymentDetails' }
+    const message = {
+      type: 'paymentDetails',
+      data: { units }
+    }
     const res = await axios.post(url, Buffer.from(JSON.stringify(message)), {
       timeout: 10000,
       headers: {
@@ -214,9 +203,7 @@ export class SettlementEngine {
         console.error('Error getting payment details from counterparty', err)
         throw err
       })
-      if (!this.embarkTX) {
-        await this.settleTX(details, units)
-      }
+      // TODO: Resolve payment with details depending on pay flow
     } catch (err) {
       console.error(`Failed to send ${units} ${this.unitName} to ${id}:`, err)
     }

@@ -50,6 +50,7 @@ export interface EnginePlugin {
   handleIncomingTransaction: any
   settleOutgoingTransaction: any
   embarkTransactionRequest?: any
+  handleIncomingMisc?: any
   configureAPI?: any
   subscribeAPI?: any
   eliminateAPI?: any
@@ -83,6 +84,7 @@ export class SettlementEngine {
   handleTX: any
   settleTX: any
   embarkTX?: any
+  handleMisc?: any
   configureAPI?: any
   subscribeAPI?: any
   eliminateAPI?: any
@@ -116,6 +118,7 @@ export class SettlementEngine {
     this.handleTX = plugin.handleIncomingTransaction
     this.settleTX = plugin.settleOutgoingTransaction
     this.embarkTX = plugin.embarkTransactionRequest
+    this.handleMisc = plugin.handleIncomingMisc
     this.configureAPI = plugin.configureAPI
     this.subscribeAPI = plugin.subscribeAPI
     this.eliminateAPI = plugin.eliminateAPI
@@ -169,6 +172,11 @@ export class SettlementEngine {
         this.handleTransaction(ctx)
       )
     }
+
+    // Miscellaneous
+    if (this.handleMisc) {
+      this.router.post('/accounts/:id/misc', ctx => this.handleMisc(ctx))
+    }
   }
 
   async getPaymentDetails (accountId: string, units: string) {
@@ -177,13 +185,13 @@ export class SettlementEngine {
       ? {
         type: 'paymentRequest',
         data: {
-          token: await this.embarkTX(
-            this.clientId,
-            this.secret,
-            this.address
-          ),
-          units
-        }
+            token: await this.embarkTX(
+              this.clientId,
+              this.secret,
+              this.address
+            ),
+            units
+          }
       }
       : { type: 'paymentDetails' }
     const res = await axios.post(url, Buffer.from(JSON.stringify(message)), {

@@ -1,7 +1,13 @@
 FROM node:current-alpine
 WORKDIR /app
-COPY package.json /app
+
+COPY package.json .
+
+# RUN npm install --only=production
 RUN npm install
-COPY . /app
-CMD npm run start
-EXPOSE 8081
+
+COPY . .
+RUN npm run build
+
+EXPOSE 3000
+CMD node build/launch.js

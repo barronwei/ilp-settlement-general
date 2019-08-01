@@ -6,8 +6,10 @@
   "scripts": {
     "start": "tsc && node build/launch.js",
     "build": "tsc",
-    "clean": "rm -rf build",
+    "clean": "rm -rf build && rm -rf node_modules",
     "debug": "tsc && DEBUG=* node build/launch.js",
+    "dock": "docker-compose build && docker-compose up",
+    "lint": "tslint --project .",
     "test": "mocha -r ts-node/register test/**/*.test.ts",
     "next:start": "next start src/frontend",
     "next:build": "next build src/frontend",

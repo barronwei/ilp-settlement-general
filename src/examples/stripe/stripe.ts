@@ -8,6 +8,7 @@ const ENGINE_MODE = process.env.ENGINE_MODE || false
 
 const CONNECTOR_URL = process.env.CONNECTOR_URL || 'http://localhost:7771'
 
+const REDIS_HOST = process.env.REDIS_HOST || 'localhost'
 const REDIS_PORT = process.env.REDIS_PORT || 6379
 
 const LEDGER_CLIENT_ID = process.env.LEDGER_CLIENT_ID || ''
@@ -87,8 +88,9 @@ const config: EngineConfig = {
 
   connectorUrl: CONNECTOR_URL,
 
+  redisHost: REDIS_HOST,
   redisPort: +REDIS_PORT,
-  redis: new ioredis(+REDIS_PORT),
+  redis: new ioredis({ host: REDIS_HOST, port: +REDIS_PORT }),
 
   clientId: LEDGER_CLIENT_ID,
   secret: LEDGER_SECRET,

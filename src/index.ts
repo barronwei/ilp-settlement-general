@@ -23,6 +23,8 @@ const DEFAULT_PORT = 3000
 const DEFAULT_MODE = false
 
 const DEFAULT_CONNECTOR_URL = 'http://localhost:7771'
+
+const DEFAULT_REDIS_HOST = 'localhost'
 const DEFAULT_REDIS_PORT = 6379
 
 // 0 for direct & 1 for indirect
@@ -37,6 +39,7 @@ export interface EngineConfig {
 
   connectorUrl?: string
 
+  redisHost?: string
   redisPort?: number
   redis?: ioredis.Redis
 
@@ -74,6 +77,7 @@ export class SettlementEngine {
 
   connectorUrl: string
 
+  redisHost: string
   redisPort: number
   redis: ioredis.Redis
 
@@ -109,8 +113,11 @@ export class SettlementEngine {
 
     this.connectorUrl = config.connectorUrl || DEFAULT_CONNECTOR_URL
 
+    this.redisHost = config.redisHost || DEFAULT_REDIS_HOST
     this.redisPort = config.redisPort || DEFAULT_REDIS_PORT
-    this.redis = config.redis || new ioredis(this.redisPort)
+    this.redis =
+      config.redis ||
+      new ioredis({ host: this.redisHost, port: this.redisPort })
 
     this.clientId = config.clientId
     this.secret = config.secret

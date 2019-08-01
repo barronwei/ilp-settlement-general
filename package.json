@@ -47,6 +47,7 @@
     "mocha": "^6.1.4",
     "mocha-typescript": "^1.1.17",
     "mockttp": "^0.16.1",
+    "react-stripe-elements": "^4.0.0",
     "sinon": "^7.3.2",
     "source-map-support": "^0.5.12",
     "stripe": "^7.5.0",

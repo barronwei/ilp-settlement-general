@@ -12,6 +12,8 @@ In addition, `configureAPI` and `subscribeAPI` are available to set up any platf
 
 ## TODO
 
+- [x] Dockerize the engine
+- [ ] Test Dockerfile 
 - [ ] Add React interface to authorize payments for Stripe example
 - [ ] Refactor indirect payment flow
 - [ ] Add types for engine plugin methods

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { StripeProvider, Elements } from "react-stripe-elements";
-import Form from "./Form";
+import Invoice from "./Invoice";
 
 export default function Stripe() {
   const [stripe, setStripe] = useState(null);
@@ -10,7 +10,7 @@ export default function Stripe() {
   return (
     <StripeProvider stripe={stripe}>
       <Elements>
-        <Form />
+        <Invoice />
       </Elements>
     </StripeProvider>
   );

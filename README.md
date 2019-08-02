@@ -17,6 +17,7 @@ In addition, `configureAPI` and `subscribeAPI` are available to set up any platf
 - [ ] Add React interface to authorize payments for Stripe example
 - [ ] Refactor indirect payment flow
 - [ ] Add types for engine plugin methods
+- [ ] Add types for Next.js in engine
 - [ ] Add integration tests
 - [ ] Update README `Usage` section to account for new indirect payment flow
 

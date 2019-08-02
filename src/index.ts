@@ -2,6 +2,7 @@ import * as Koa from 'koa'
 import * as Router from 'koa-router'
 import * as bodyParser from 'koa-bodyparser'
 import * as ioredis from 'ioredis'
+import next from 'next'
 import axios from 'axios'
 import { Server } from 'net'
 import { v4 as uuidv4 } from 'uuid'
@@ -21,13 +22,13 @@ const DEFAULT_PORT = 3000
 // 0 for test & 1 for live
 const DEFAULT_MODE = false
 
+// 0 for direct & 1 for indirect
+const DEFAULT_PAY_FLOW = false
+
 const DEFAULT_CONNECTOR_URL = 'http://localhost:7771'
 
 const DEFAULT_REDIS_HOST = 'localhost'
 const DEFAULT_REDIS_PORT = 6379
-
-// 0 for direct & 1 for indirect
-const DEFAULT_PAY_FLOW = false
 
 const DEFAULT_MIN_UNITS = 1000000
 
@@ -35,6 +36,8 @@ export interface EngineConfig {
   host?: string
   port?: number
   mode?: boolean
+
+  payFlow?: boolean
 
   connectorUrl?: string
 
@@ -45,8 +48,6 @@ export interface EngineConfig {
   clientId: string
   secret: string
   address?: string
-
-  payFlow?: boolean
 
   prefix: string
   assetScale: number
@@ -71,11 +72,14 @@ export class SettlementEngine {
   port: number
   mode: boolean
 
+  payFlow: boolean
+  next: any
+
   server: Server
   router: Router
 
-  connectorUrl: string
   engineUrl: string
+  connectorUrl: string
 
   redisHost: string
   redisPort: number
@@ -84,8 +88,6 @@ export class SettlementEngine {
   clientId: string
   secret: string
   address: string
-
-  payFlow: boolean
 
   prefix: string
   assetScale: number
@@ -111,8 +113,14 @@ export class SettlementEngine {
     this.port = config.port || DEFAULT_PORT
     this.mode = config.mode || DEFAULT_MODE
 
-    this.connectorUrl = config.connectorUrl || DEFAULT_CONNECTOR_URL
+    this.payFlow = config.payFlow || DEFAULT_PAY_FLOW
+
+    if (this.payFlow) {
+      this.next = next({ dev: this.mode })
+    }
+
     this.engineUrl = `https://${this.host}:${this.port}`
+    this.connectorUrl = config.connectorUrl || DEFAULT_CONNECTOR_URL
 
     this.redisHost = config.redisHost || DEFAULT_REDIS_HOST
     this.redisPort = config.redisPort || DEFAULT_REDIS_PORT
@@ -123,8 +131,6 @@ export class SettlementEngine {
     this.clientId = config.clientId
     this.secret = config.secret
     this.address = config.address || this.clientId
-
-    this.payFlow = config.payFlow || DEFAULT_PAY_FLOW
 
     this.prefix = config.prefix
     this.assetScale = config.assetScale
@@ -137,7 +143,7 @@ export class SettlementEngine {
     this.subscribeAPI = plugin.subscribeAPI
     this.eliminateAPI = plugin.eliminateAPI
 
-    this.app.context.enigneUrl = this.engineUrl
+    this.app.context.engineUrl = this.engineUrl
     this.app.context.redis = this.redis
     this.app.context.address = this.address
     this.app.context.payFlow = this.payFlow
@@ -177,6 +183,14 @@ export class SettlementEngine {
       this.findAccountMiddleware,
       createSettlement
     )
+
+    // Next.js
+    if (this.payFlow) {
+      this.router.get('/accounts/:id/invoice', async ctx => {
+        await this.next.render(ctx.req, ctx.res, '/', ctx.query)
+        ctx.respond = false
+      })
+    }
 
     // Webhooks
     if (!this.subscribeAPI) {

@@ -2,7 +2,6 @@ import * as Koa from 'koa'
 import * as Router from 'koa-router'
 import * as bodyParser from 'koa-bodyparser'
 import * as ioredis from 'ioredis'
-import next from 'next'
 import axios from 'axios'
 import { Server } from 'net'
 import { v4 as uuidv4 } from 'uuid'
@@ -15,6 +14,8 @@ import {
 } from './controllers/account'
 import { create as createMessage } from './controllers/message'
 import { create as createSettlement } from './controllers/settlement'
+
+const next = require('next')
 
 const DEFAULT_HOST = 'localhost'
 const DEFAULT_PORT = 3000
@@ -116,7 +117,7 @@ export class SettlementEngine {
     this.payFlow = config.payFlow || DEFAULT_PAY_FLOW
 
     if (this.payFlow) {
-      this.next = next({ dev: this.mode })
+      this.next = next({ dev: this.mode, dir: 'src/frontend' })
     }
 
     this.engineUrl = `https://${this.host}:${this.port}`
@@ -300,7 +301,7 @@ export class SettlementEngine {
       console.log('Initializing subscriptions!')
     } else {
       console.log(
-        `Webhooks at ${this.engineUrl}/accounts/${this.clientId}/webhooks!`
+        `Webhooks at ${this.engineUrl}/accounts/${this.address}/webhooks!`
       )
     }
 

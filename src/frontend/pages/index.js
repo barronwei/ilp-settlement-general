@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { StripeProvider, Elements } from "react-stripe-elements";
-import Invoice from "./Invoice";
+import { StripeProvider } from "react-stripe-elements";
+import Checkout from "./Checkout";
 
 export default function Stripe() {
   const [stripe, setStripe] = useState(null);
@@ -9,9 +9,7 @@ export default function Stripe() {
   });
   return (
     <StripeProvider stripe={stripe}>
-      <Elements>
-        <Invoice />
-      </Elements>
+      <Checkout />
     </StripeProvider>
   );
 }

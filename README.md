@@ -18,6 +18,7 @@ In addition, `configureAPI` and `subscribeAPI` are available to set up any platf
 - [ ] Refactor indirect payment flow
 - [ ] Add types for engine plugin methods
 - [ ] Add types for Next.js in engine
+- [ ] Add types for React
 - [ ] Add integration tests
 - [ ] Update README `Usage` section to account for new indirect payment flow
 

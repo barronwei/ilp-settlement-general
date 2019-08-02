@@ -1,7 +1,6 @@
 import * as Koa from 'koa'
 import * as Router from 'koa-router'
 import * as bodyParser from 'koa-bodyparser'
-import * as ngrok from 'ngrok'
 import * as ioredis from 'ioredis'
 import axios from 'axios'
 import { Server } from 'net'
@@ -76,6 +75,7 @@ export class SettlementEngine {
   router: Router
 
   connectorUrl: string
+  engineUrl: string
 
   redisHost: string
   redisPort: number
@@ -112,6 +112,7 @@ export class SettlementEngine {
     this.mode = config.mode || DEFAULT_MODE
 
     this.connectorUrl = config.connectorUrl || DEFAULT_CONNECTOR_URL
+    this.engineUrl = `https://${this.host}:${this.port}`
 
     this.redisHost = config.redisHost || DEFAULT_REDIS_HOST
     this.redisPort = config.redisPort || DEFAULT_REDIS_PORT
@@ -136,6 +137,7 @@ export class SettlementEngine {
     this.subscribeAPI = plugin.subscribeAPI
     this.eliminateAPI = plugin.eliminateAPI
 
+    this.app.context.enigneUrl = this.engineUrl
     this.app.context.redis = this.redis
     this.app.context.address = this.address
     this.app.context.payFlow = this.payFlow
@@ -263,31 +265,29 @@ export class SettlementEngine {
     this.server = this.app.listen(this.port, this.host)
     console.log('Starting to listen on', this.port)
 
-    const urlName =
-      this.host === DEFAULT_HOST
-        ? await ngrok.connect(this.port)
-        : `https://${this.host}:${this.port}`
-    console.log(`Engine running at ${urlName}!`)
-
     if (this.configureAPI) {
       await this.configureAPI({
         address: this.address,
         client: this.clientId,
         secret: this.secret,
         mode: this.mode,
-        host: urlName
+        host: this.engineUrl
       })
     }
-    console.log(`Starting engine in ${this.mode ? 'live' : 'test'} mode!`)
+    console.log(
+      `Engine up at ${this.engineUrl} in ${this.mode ? 'live' : 'test'} mode!`
+    )
 
     if (this.subscribeAPI) {
       await this.subscribeAPI({
-        urlName,
+        host: this.engineUrl,
         handler: this.handleTransaction.bind(this)
       })
       console.log('Initializing subscriptions!')
     } else {
-      console.log(`Webhooks at ${urlName}/accounts/${this.clientId}/webhooks!`)
+      console.log(
+        `Webhooks at ${this.engineUrl}/accounts/${this.clientId}/webhooks!`
+      )
     }
 
     console.log(
@@ -302,11 +302,6 @@ export class SettlementEngine {
     if (this.eliminateAPI) {
       await this.eliminateAPI()
     }
-    if (this.host === DEFAULT_HOST) {
-      await ngrok.disconnect()
-      this.server.close()
-    } else {
-      this.server.close()
-    }
+    this.server.close()
   }
 }

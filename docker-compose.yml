@@ -5,8 +5,11 @@ services:
     image: "redis:alpine"
 
   app:
+    # image: "barronwei/stripe-se"
     build: .
+    depends_on:
+      - redis
+    env_file:
+      - sample.env
     ports:
       - "3000:3000"
-    environment:
-      - REDIS_HOST=redis

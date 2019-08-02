@@ -14,7 +14,7 @@ const REDIS_PORT = process.env.REDIS_PORT || 6379
 const LEDGER_CLIENT_ID = process.env.LEDGER_CLIENT_ID || ''
 const LEDGER_SECRET = process.env.LEDGER_SECRET || ''
 const LEDGER_ADDRESS = process.env.LEDGER_ADDRESS || ''
-const LEDGER_PAY_FLOW = process.env.LEDGER_PAY_FLOW || false
+const LEDGER_PAY_FLOW = true
 
 const LEDGER_PREFIX = process.env.LEDGER_PREFIX || 'stripe'
 const LEDGER_ASSET_SCALE = process.env.LEDGER_ASSET_SCALE || 2

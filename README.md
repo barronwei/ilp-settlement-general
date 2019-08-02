@@ -15,6 +15,7 @@ In addition, `configureAPI` and `subscribeAPI` are available to set up any platf
 - [x] Dockerize the engine
 - [ ] Test Dockerfile 
 - [ ] Add React interface to authorize payments for Stripe example
+- [ ] Complete general message controller and payment resolution
 - [ ] Refactor indirect payment flow
 - [ ] Add types for engine plugin methods
 - [ ] Add types for Next.js in engine

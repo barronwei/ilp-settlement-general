@@ -44,7 +44,7 @@ describe('Accounts', function () {
       .catch(err => {
         throw new Error(err.message)
       })
-    assert.strictEqual(response.status, 200)
+    assert.strictEqual(response.status, 201)
     const account = await engine.redis.get(
       `${engine.prefix}:accounts:${testAccount.id}`
     )
@@ -69,7 +69,7 @@ describe('Accounts', function () {
         throw new Error(err.message)
       })
 
-    assert.strictEqual(response.status, 200)
+    assert.strictEqual(response.status, 201)
 
     const account = await engine.redis.get(
       `${engine.prefix}:accounts:${existingAccount.id}`
@@ -113,7 +113,7 @@ describe('Accounts', function () {
       `${engine.prefix}:accounts:${testAccount.id}`
     )
 
-    assert.strictEqual(response.status, 200)
+    assert.strictEqual(response.status, 204)
     assert.isNull(account)
   })
 })

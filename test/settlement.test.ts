@@ -99,7 +99,7 @@ describe('Accounts Settlement', function () {
     }
     const mockMessageEndpoint = await mockttp
       .post(`/accounts/${testAccount.id}/messages`)
-      .thenReply(200, Buffer.from(JSON.stringify(paymentDetails)))
+      .thenReply(201, Buffer.from(JSON.stringify(paymentDetails)))
 
     await engine.redis.set(
       `${engine.prefix}:accounts:${testAccount.id}`,
@@ -117,7 +117,7 @@ describe('Accounts Settlement', function () {
     const requests = await mockMessageEndpoint.getSeenRequests()
     const [request] = requests
 
-    assert.strictEqual(response.status, 200)
+    assert.strictEqual(response.status, 201)
     assert.strictEqual(requests.length, 1)
     assert.deepEqual(request.body.json, {
       type: 'paymentDetails'

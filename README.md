@@ -4,11 +4,11 @@ This repository houses a general implementation of an ILP settlement engine per 
 
 ## Usage
 
-In contrast to the available PayPal and XRP settlement engines, this general abstraction inputs a plugin that requires two methods: `handleIncomingTransaction` and `settleOutgoingTransaction`. With these two methods alone, this engine can run direct payment settlements. 
+In contrast to the currently available PayPal and XRP settlement engines, this general abstraction inputs a plugin that requires two methods: `handleIncomingTransaction` and `settleOutgoingTransaction`. With these two methods alone, this engine can run both direct and indirect payment settlements. 
 
-If a platform such as Stripe requires an indirect payment flow in which a token needs to be authorized, supplying an additional method to the plugin, `embarkTransactionRequest`, will allow the engine to supply the token during the request for `PaymentDetails` via this function. Moreover, the engine assumes that `settleOutgoingTransaction` will resolve the token.
+Moreover, `configureAPI` and `subscribeAPI` are available to set up any platform's API. If `subscribeAPI` is not provided, the engine assumes that webhooks are needed to listen for incoming transactions and sets that route up. `eliminateAPI` is available to account for any actions necessary when shutting down the settlement engine.
 
-In addition, `configureAPI` and `subscribeAPI` are available to set up any platform's API. If `subscribeAPI` is not provided, the engine assumes that webhooks are needed to listen for incoming transactions and sets that route up. 
+In order to authorize payments in an indirect payment flow, this abstraction utilizes `Next.js` to launch a server-side rendering of a React user interface for the counterparty.
 
 ## TODO
 
@@ -21,7 +21,6 @@ In addition, `configureAPI` and `subscribeAPI` are available to set up any platf
 - [ ] Add types for Next.js in engine
 - [ ] Add types for React
 - [ ] Add integration tests
-- [ ] Update README `Usage` section to account for new indirect payment flow
 
 ## Contributing
 

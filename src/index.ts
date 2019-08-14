@@ -60,7 +60,6 @@ export interface EnginePlugin {
   handleIncomingTransaction: any
   settleOutgoingTransaction: any
   embarkTransactionRequest?: any
-  handleIncomingMisc?: any
   configureAPI?: any
   subscribeAPI?: any
   eliminateAPI?: any

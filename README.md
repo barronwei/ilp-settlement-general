@@ -4,16 +4,18 @@ This repository houses a general implementation of an ILP settlement engine per 
 
 ## Usage
 
-In contrast to the currently available PayPal and XRP settlement engines, this general abstraction inputs a plugin that requires two methods: `handleIncomingTransaction` and `settleOutgoingTransaction`. With these two methods alone, this engine can run both direct and indirect payment settlements. 
+In contrast to the currently available PayPal and XRP settlement engines, this general abstraction inputs a plugin that requires two methods: `handleIncomingTransaction` and `settleOutgoingTransaction`. With these two methods alone, this engine can run both direct and indirect payment settlements.
 
 Moreover, `configureAPI` and `subscribeAPI` are available to set up any platform's API. If `subscribeAPI` is not provided, the engine assumes that webhooks are needed to listen for incoming transactions and sets that route up. `eliminateAPI` is available to account for any actions necessary when shutting down the settlement engine.
 
 In order to authorize payments in an indirect payment flow, this abstraction utilizes `Next.js` to launch a server-side rendering of a React user interface for the counterparty.
 
+The test for handling incoming payments currently fails.
+
 ## TODO
 
 - [x] Dockerize the engine
-- [ ] Test Dockerfile 
+- [ ] Test Dockerfile
 - [ ] Add React interface to authorize payments for Stripe example
 - [ ] Complete general message controller and payment resolution
 - [ ] Refactor indirect payment flow

@@ -52,13 +52,13 @@ async function handleIncomingTransaction (ctx: Context) {
 }
 
 async function settleOutgoingTransaction (data: any, units: string) {
-  const { token, tag } = data
+  const { token, id } = data
   const amount = Number(units) / 10 ** this.assetScale
   const charge = await stripe.charge({
     amount,
     currency: LEDGER_CURRENCY,
     source: token,
-    description: tag
+    description: id
   })
   console.log(charge)
 }

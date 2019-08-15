@@ -252,19 +252,10 @@ export class SettlementEngine {
     const { id, pay }: { id: string; pay: string } = val
     if (res) {
       try {
-        const accountId = await this.redis.get(
-          `${this.prefix}:tag:${id}:accountId`
-        )
-        const accJSON = await this.redis.get(
-          `${this.prefix}:accounts:${accountId}`
-        )
-        if (accJSON) {
-          const acc = JSON.parse(accJSON)
-          const units = Number(pay) * 10 ** this.assetScale
-          await this.notifySettlement(acc.id, units.toString())
-          console.log(`Credits ${acc.id} with ${units} ${this.unitName}!`)
-          ctx.body = 200
-        }
+        const units = Number(pay) * 10 ** this.assetScale
+        await this.notifySettlement(id, units.toString())
+        console.log(`Credits ${id} with ${units} ${this.unitName}!`)
+        ctx.body = 200
       } catch (err) {
         console.error('Failed to find account under', id, err)
         ctx.body = 404

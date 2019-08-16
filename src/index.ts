@@ -5,7 +5,6 @@ import * as ioredis from 'ioredis'
 import axios from 'axios'
 import { Server } from 'net'
 import { v4 as uuidv4 } from 'uuid'
-
 import { Account } from './models/account'
 import {
   create as createAccount,
@@ -59,7 +58,6 @@ export interface EngineConfig {
 export interface EnginePlugin {
   handleIncomingTransaction: any
   settleOutgoingTransaction: any
-  embarkTransactionRequest?: any
   configureAPI?: any
   subscribeAPI?: any
   eliminateAPI?: any

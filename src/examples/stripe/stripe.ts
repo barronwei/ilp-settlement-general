@@ -23,11 +23,6 @@ const LEDGER_UNIT_NAME = process.env.LEDGER_UNIT_NAME || 'cents'
 const LEDGER_MIN_UNITS = process.env.LEDGER_MIN_CENTS || 1000000
 const LEDGER_CURRENCY = process.env.LEDGER_CURRENCY || 'USD'
 
-const CREDIT_NUMBER = process.env.CREDIT_NUMBER || '4242424242424242'
-const CREDIT_EXP_MONTH = process.env.CREDIT_EXP_MONTH || 1
-const CREDIT_EXP_YEAR = process.env.CREDIT_EXP_YEAR || 2020
-const CREDIT_CVC = process.env.CREDIT_CVC || '2222'
-
 const stripe = require('stripe')(LEDGER_SECRET)
 
 async function handleIncomingTransaction (ctx: Context) {
@@ -63,21 +58,10 @@ async function settleOutgoingTransaction (data: any, units: string) {
   console.log(charge)
 }
 
-async function embarkTransactionRequest () {
-  return stripe.tokens.create({
-    card: {
-      number: CREDIT_NUMBER,
-      exp_month: CREDIT_EXP_MONTH,
-      exp_year: CREDIT_EXP_YEAR,
-      cvc: CREDIT_CVC
-    }
-  })
-}
-
 async function configureAPI (apiConfig: any) {
   const { host } = apiConfig
   await stripe.webhookEndpoints.create({
-    url: `${host}/accounts/${engine.clientId}/webhooks`,
+    url: `${host}/accounts/${LEDGER_CLIENT_ID}/webhooks`,
     enabled_events: ['charge.succeeded']
   })
 }
@@ -108,7 +92,6 @@ const config: EngineConfig = {
 const plugin: EnginePlugin = {
   handleIncomingTransaction,
   settleOutgoingTransaction,
-  embarkTransactionRequest,
   configureAPI
 }
 

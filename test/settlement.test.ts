@@ -45,7 +45,7 @@ describe('Accounts Settlement', function () {
     await engine.close()
   })
 
-  it('Notifies connector of incoming settlement', async () => {
+  it('Notifies connector of incoming settlement via webhooks', async () => {
     const mockEndpoint = await mockttp
       .post(`/accounts/${testAccount.id}/settlement`)
       .thenReply(200)
@@ -55,27 +55,15 @@ describe('Accounts Settlement', function () {
       JSON.stringify(testAccount)
     )
 
-    const tag = randomBytes(4).readUInt32BE(0)
-
     sinon.stub(engine, 'handleTX').returns({
       res: true,
-      val: { id: tag.toString(), pay: '5' }
+      val: { id: testAccount.id, pay: '5' }
     })
-
-    await engine.redis.set(
-      `${engine.prefix}:tag:${tag}:accountId`,
-      testAccount.id
-    )
-
-    await engine.redis.set(
-      `${engine.prefix}:accountId:${testAccount.id}:tag`,
-      tag
-    )
 
     const response = await axios
       .post(
         `http://localhost:3000/accounts/${engine.clientId}/webhooks`,
-        tag.toString()
+        testAccount.id
       )
       .catch(err => {
         throw new Error(err.message)
@@ -94,8 +82,7 @@ describe('Accounts Settlement', function () {
 
   it('Attempts to get payment details from counterparty', async () => {
     const paymentDetails = {
-      address: 'test123',
-      tag: 123456
+      address: 'test123'
     }
     const mockMessageEndpoint = await mockttp
       .post(`/accounts/${testAccount.id}/messages`)

@@ -21,8 +21,8 @@ In order to authorize payments in an indirect payment flow, this abstraction uti
 - [x] Dockerize the engine
 - [ ] Test Dockerfile
 - [ ] Fix Stripe example
-- [ ] Complete general message controller and payment resolution
-- [ ] Refactor indirect payment flow
+- [x] Complete general message controller and payment resolution
+- [x] Refactor indirect payment flow
 - [ ] Add types for engine plugin methods
 - [ ] Add types for Next.js in engine
 - [ ] Add types for React

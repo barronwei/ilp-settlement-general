@@ -57,7 +57,7 @@ export interface EngineConfig {
 
 export interface EnginePlugin {
   handleIncomingTransaction: any
-  settleOutgoingTransaction: any
+  settleOutgoingTransaction?: any
   configureAPI?: any
   subscribeAPI?: any
   eliminateAPI?: any
@@ -94,7 +94,7 @@ export class SettlementEngine {
 
   // Plugin Config
   handleTX: any
-  settleTX: any
+  settleTX?: any
   configureAPI?: any
   subscribeAPI?: any
   eliminateAPI?: any
@@ -198,11 +198,10 @@ export class SettlementEngine {
     }
   }
 
-  async getPaymentDetails (accountId: string, units: string) {
+  async getPaymentDetails (accountId: string) {
     const url = `${this.connectorUrl}\\accounts\\${accountId}\\messages`
     const message = {
-      type: 'paymentDetails',
-      data: { units }
+      type: 'paymentDetails'
     }
     const res = await axios.post(url, Buffer.from(JSON.stringify(message)), {
       timeout: 10000,
@@ -220,11 +219,11 @@ export class SettlementEngine {
       `Attempting to send ${units} ${this.unitName} to account: ${id}`
     )
     try {
-      const details = await this.getPaymentDetails(id, units).catch(err => {
+      const { address } = await this.getPaymentDetails(id).catch(err => {
         console.error('Error getting payment details from counterparty', err)
         throw err
       })
-      // TODO: Resolve payment with details depending on pay flow
+      this.settleTX(address, units)
     } catch (err) {
       console.error(`Failed to send ${units} ${this.unitName} to ${id}:`, err)
     }

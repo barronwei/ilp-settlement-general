@@ -17,11 +17,10 @@ export async function create (ctx: Context) {
 }
 
 async function handleMessage (message: Message, ctx: Context) {
-  const { type, data } = message
+  const { type } = message
   const { address } = ctx
   switch (type) {
     case 'paymentDetails':
-      // TODO: Generate address based on pay flow
       const paymentDetails: PayDetails = {
         address
       }

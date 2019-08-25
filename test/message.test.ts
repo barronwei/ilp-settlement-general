@@ -3,7 +3,6 @@ import * as chai from 'chai'
 import * as sinon from 'sinon'
 import axios from 'axios'
 import { getLocal, Mockttp } from 'mockttp'
-import { randomBytes } from 'crypto'
 import { SettlementEngine } from '../src'
 import { Account } from '../src/models/account'
 
@@ -70,14 +69,9 @@ describe('Messages', function () {
         throw new Error(err.message)
       })
 
-    const tag = Number(
-      await engine.redis.get(`${engine.prefix}:accountId:${testAccount.id}:tag`)
-    )
-
     assert.strictEqual(response.status, 200)
     assert.deepEqual(response.data, {
-      address: engine.address,
-      tag
+      address: engine.address
     })
   })
 
@@ -85,18 +79,6 @@ describe('Messages', function () {
     await engine.redis.set(
       `${engine.prefix}:accounts:${testAccount.id}`,
       JSON.stringify(testAccount)
-    )
-
-    const tag = randomBytes(4).readUInt32BE(0)
-
-    await engine.redis.set(
-      `${engine.prefix}:destinationTag:${tag}:accountId`,
-      testAccount.id
-    )
-
-    await engine.redis.set(
-      `${engine.prefix}:accountId:${testAccount.id}:tag`,
-      tag
     )
 
     const message = {
@@ -120,8 +102,7 @@ describe('Messages', function () {
 
     assert.strictEqual(response.status, 200)
     assert.deepEqual(response.data, {
-      address: engine.address,
-      tag: tag.toString()
+      address: engine.address
     })
   })
 })

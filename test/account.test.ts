@@ -4,6 +4,7 @@ import * as sinon from 'sinon'
 import axios from 'axios'
 import { SettlementEngine } from '../src'
 import { Account } from '../src/models/account'
+import { TxHandlerResult } from '../src/models/plugin'
 
 const Redis = require('ioredis-mock')
 const assert = Object.assign(chai.assert, sinon.assert)
@@ -13,6 +14,14 @@ describe('Accounts', function () {
 
   const testAccount: Account = {
     id: 'testId'
+  }
+
+  const TxResult: TxHandlerResult = {
+    result: true,
+    value: {
+      id: '123',
+      pay: '123'
+    }
   }
 
   beforeEach(async () => {
@@ -26,8 +35,8 @@ describe('Accounts', function () {
         unitName: ''
       },
       {
-        handleIncomingTransaction: () => 1,
-        settleOutgoingTransaction: () => 1
+        handleTransaction: async () => TxResult,
+        settleTransaction: async () => true
       }
     )
 

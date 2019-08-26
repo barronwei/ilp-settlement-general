@@ -5,6 +5,7 @@ import axios from 'axios'
 import { getLocal, Mockttp } from 'mockttp'
 import { SettlementEngine } from '../src'
 import { Account } from '../src/models/account'
+import { TxHandlerResult } from '../src/models/plugin'
 
 const Redis = require('ioredis-mock')
 const assert = Object.assign(chai.assert, sinon.assert)
@@ -15,6 +16,14 @@ describe('Messages', function () {
 
   const testAccount: Account = {
     id: 'testId'
+  }
+
+  const TxResult: TxHandlerResult = {
+    result: true,
+    value: {
+      id: '123',
+      pay: '123'
+    }
   }
 
   beforeEach(async () => {
@@ -31,8 +40,8 @@ describe('Messages', function () {
         unitName: ''
       },
       {
-        handleIncomingTransaction: () => 1,
-        settleOutgoingTransaction: () => 1
+        handleTransaction: async () => TxResult,
+        settleTransaction: async () => true
       }
     )
 

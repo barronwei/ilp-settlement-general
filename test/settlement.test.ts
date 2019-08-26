@@ -3,9 +3,9 @@ import * as chai from 'chai'
 import * as sinon from 'sinon'
 import axios from 'axios'
 import { getLocal, Mockttp } from 'mockttp'
-import { randomBytes } from 'crypto'
 import { SettlementEngine } from '../src'
 import { Account } from '../src/models/account'
+import { TxHandlerResult } from '../src/models/plugin'
 
 const Redis = require('ioredis-mock')
 const assert = Object.assign(chai.assert, sinon.assert)
@@ -16,6 +16,14 @@ describe('Accounts Settlement', function () {
 
   const testAccount: Account = {
     id: 'testId'
+  }
+
+  const TxResult: TxHandlerResult = {
+    result: true,
+    value: {
+      id: '123',
+      pay: '123'
+    }
   }
 
   beforeEach(async () => {
@@ -33,8 +41,8 @@ describe('Accounts Settlement', function () {
         unitName: ''
       },
       {
-        handleIncomingTransaction: () => 1,
-        settleOutgoingTransaction: () => 1
+        handleTransaction: async () => TxResult,
+        settleTransaction: async () => true
       }
     )
     await engine.start()
@@ -55,9 +63,9 @@ describe('Accounts Settlement', function () {
       JSON.stringify(testAccount)
     )
 
-    sinon.stub(engine, 'handleTX').returns({
-      res: true,
-      val: { id: testAccount.id, pay: '5' }
+    sinon.stub(engine, 'handleTx').resolves({
+      result: true,
+      value: { id: testAccount.id, pay: '5' }
     })
 
     const response = await axios

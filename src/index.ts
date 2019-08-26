@@ -7,6 +7,11 @@ import { Server } from 'net'
 import { v4 as uuidv4 } from 'uuid'
 import { Account } from './models/account'
 import {
+  TxHandlerResult,
+  ApiConfigureParam,
+  ApiSubscribeParam
+} from './models/plugin'
+import {
   create as createAccount,
   search as searchAccount,
   remove as removeAccount
@@ -56,11 +61,11 @@ export interface EngineConfig {
 }
 
 export interface EnginePlugin {
-  handleIncomingTransaction: any
-  settleOutgoingTransaction?: any
-  configureAPI?: any
-  subscribeAPI?: any
-  eliminateAPI?: any
+  handleTransaction: (ctx: Koa.Context) => Promise<TxHandlerResult>
+  settleTransaction: (address: string, units: string) => Promise<boolean>
+  configureAPI?: (ApiConfig: ApiConfigureParam) => Promise<boolean>
+  subscribeAPI?: (ApiSubscription: ApiSubscribeParam) => Promise<boolean>
+  eliminateAPI?: () => Promise<boolean>
 }
 
 export class SettlementEngine {
@@ -93,16 +98,18 @@ export class SettlementEngine {
   minUnits: number
 
   // Plugin Config
-  handleTX: any
-  settleTX?: any
-  configureAPI?: any
-  subscribeAPI?: any
-  eliminateAPI?: any
+  handleTx: (ctx: Koa.Context) => Promise<TxHandlerResult>
+  settleTx: (address: string, units: string) => Promise<boolean>
+  configureAPI?: (ApiConfig: ApiConfigureParam) => Promise<boolean>
+  subscribeAPI?: (ApiSubscription: ApiSubscribeParam) => Promise<boolean>
+  eliminateAPI?: () => Promise<boolean>
 
   constructor (config: EngineConfig, plugin: EnginePlugin) {
     this.app = new Koa()
     this.app.use(async (ctx, next) => {
-      if (ctx.path.includes('messages')) ctx.disableBodyParser = true
+      if (ctx.path.includes('messages')) {
+        ctx.disableBodyParser = true
+      }
       await next()
     })
     this.app.use(bodyParser())
@@ -131,12 +138,13 @@ export class SettlementEngine {
     this.address = config.address || this.clientId
 
     this.prefix = config.prefix
+
     this.assetScale = config.assetScale
     this.unitName = config.unitName
     this.minUnits = config.minUnits || DEFAULT_MIN_UNITS
 
-    this.handleTX = plugin.handleIncomingTransaction
-    this.settleTX = plugin.settleOutgoingTransaction
+    this.handleTx = plugin.handleTransaction
+    this.settleTx = plugin.settleTransaction
     this.configureAPI = plugin.configureAPI
     this.subscribeAPI = plugin.subscribeAPI
     this.eliminateAPI = plugin.eliminateAPI
@@ -215,15 +223,18 @@ export class SettlementEngine {
 
   async settleAccount (account: Account, units: string) {
     const { id } = account
-    console.log(
-      `Attempting to send ${units} ${this.unitName} to account: ${id}`
-    )
+    console.log(`Attempting to send ${units} ${this.unitName} to ${id}`)
     try {
       const { address } = await this.getPaymentDetails(id).catch(err => {
         console.error('Error getting payment details from counterparty', err)
         throw err
       })
-      this.settleTX(address, units)
+      const result = await this.settleTx(address, units)
+      if (result) {
+        console.log(`Successfully sent ${units} ${this.unitName} to ${id}!`)
+      } else {
+        console.error(`Failure to send ${units} ${this.unitName} to ${id}!`)
+      }
     } catch (err) {
       console.error(`Failed to send ${units} ${this.unitName} to ${id}:`, err)
     }
@@ -245,9 +256,9 @@ export class SettlementEngine {
   }
 
   private async handleTransaction (ctx: Koa.Context) {
-    const { res, val }: { res: Boolean; val: any } = await this.handleTX(ctx)
-    const { id, pay }: { id: string; pay: string } = val
-    if (res) {
+    const { result, value } = await this.handleTx(ctx)
+    const { id, pay } = value
+    if (result) {
       try {
         const units = Number(pay) * 10 ** this.assetScale
         await this.notifySettlement(id, units.toString())
@@ -268,24 +279,35 @@ export class SettlementEngine {
     console.log('Starting to listen on', this.port)
 
     if (this.configureAPI) {
-      await this.configureAPI({
+      const ApiConfig: ApiConfigureParam = {
         address: this.address,
         client: this.clientId,
         secret: this.secret,
         mode: this.mode,
         host: this.engineUrl
-      })
+      }
+      const result = await this.configureAPI(ApiConfig)
+      if (result) {
+        console.log('Successfuly configured the API!')
+      } else {
+        console.error('Failed to configure the API!')
+      }
     }
     console.log(
       `Engine up at ${this.engineUrl} in ${this.mode ? 'live' : 'test'} mode!`
     )
 
     if (this.subscribeAPI) {
-      await this.subscribeAPI({
+      const ApiSubscription: ApiSubscribeParam = {
         host: this.engineUrl,
         handler: this.handleTransaction.bind(this)
-      })
-      console.log('Initializing subscriptions!')
+      }
+      const result = await this.subscribeAPI(ApiSubscription)
+      if (result) {
+        console.log('Successfuly subscribed to the API!')
+      } else {
+        console.error('Failed to subscribe to the API!')
+      }
     } else {
       console.log(
         `Webhooks at ${this.engineUrl}/accounts/${this.address}/webhooks!`
@@ -302,7 +324,12 @@ export class SettlementEngine {
   public async close () {
     console.log('Shutting down engine!')
     if (this.eliminateAPI) {
-      await this.eliminateAPI()
+      const result = await this.eliminateAPI()
+      if (result) {
+        console.log('Successfully disconnected the API!')
+      } else {
+        console.error('Failure to disconnect the API!')
+      }
     }
     this.server.close()
   }

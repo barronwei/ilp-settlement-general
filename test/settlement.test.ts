@@ -41,8 +41,8 @@ describe('Accounts Settlement', function () {
         unitName: ''
       },
       {
-        handleTransaction: async () => TxResult,
-        settleTransaction: async () => true
+        handleTx: async () => TxResult,
+        settleTx: async () => true
       }
     )
     await engine.start()

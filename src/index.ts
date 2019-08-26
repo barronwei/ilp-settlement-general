@@ -61,8 +61,8 @@ export interface EngineConfig {
 }
 
 export interface EnginePlugin {
-  handleTransaction: (ctx: Koa.Context) => Promise<TxHandlerResult>
-  settleTransaction: (address: string, units: string) => Promise<boolean>
+  handleTx: (ctx: Koa.Context) => Promise<TxHandlerResult>
+  settleTx: (address: string, units: string) => Promise<boolean>
   configureAPI?: (ApiConfig: ApiConfigureParam) => Promise<boolean>
   subscribeAPI?: (ApiSubscription: ApiSubscribeParam) => Promise<boolean>
   eliminateAPI?: () => Promise<boolean>
@@ -143,8 +143,8 @@ export class SettlementEngine {
     this.unitName = config.unitName
     this.minUnits = config.minUnits || DEFAULT_MIN_UNITS
 
-    this.handleTx = plugin.handleTransaction
-    this.settleTx = plugin.settleTransaction
+    this.handleTx = plugin.handleTx
+    this.settleTx = plugin.settleTx
     this.configureAPI = plugin.configureAPI
     this.subscribeAPI = plugin.subscribeAPI
     this.eliminateAPI = plugin.eliminateAPI

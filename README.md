@@ -8,9 +8,9 @@ In order to avoid maintaining multiple repositories that include the same boiler
 
 ## Usage
 
-In contrast to the currently available PayPal and XRP settlement engines, this general abstraction inputs a plugin that requires two methods: `handleTransaction` and `settleTransaction`. With these methods, this engine can run either direct or indirect payment settlements, depending on the `payFlow` boolean property.
+In contrast to the currently available PayPal and XRP settlement engines, this general abstraction inputs a plugin that requires two methods: `handleTx` and `settleTx`. With these methods, this engine can run either direct or indirect payment settlements, depending on the `payFlow` boolean property.
 
-With direct payment settlements, the user would simply send payments with `settleTransaction` and the counterparty would listen via subscription or webhook and resolve the payment with `handleTransaction`.
+With direct payment settlements, the user would simply send payments with `settleTx` and the counterparty would listen via subscription or webhook and resolve the payment with `handleTx`.
 
 With indirect payment settlements, the counterparty sends a url to the user in order for the user to authorize the payment. Upon doing so, the counterparty would post a request to their own webhook endpoint and resolve the payment.
 
